@@ -1,0 +1,1 @@
+-   It seems like the amount of LP tokens I get is equal to the ETH I deposit (on the initial deposit when there is no liquidity). E.g. if I deposit 0.1 ETH, I'll get 0.1 CDLP. In that case, why am I able to specify the number of CDLP tokens I'd like to get initially?

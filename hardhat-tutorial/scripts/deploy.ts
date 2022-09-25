@@ -2,7 +2,7 @@ import { ethers } from "hardhat";
 import "dotenv/config";
 import { CRYPTO_DEV_TOKEN_CONTRACT_ADDRESS } from "../constants/index";
 
-// * Deployed at: 0x5FbDB2315678afecb367f032d93F642f64180aa3
+// * Deployed at: 0x45E8Bd1123F1bD58246be71a4729DDF537684d9b
 
 async function main() {
     const cryptoDevTokenAddress = CRYPTO_DEV_TOKEN_CONTRACT_ADDRESS;
