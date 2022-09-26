@@ -1,6 +1,6 @@
 import type { NextPage } from "next";
 import Head from "next/head";
-import { BigNumber, ethers, providers, utils } from "ethers";
+import { BigNumber, providers, utils } from "ethers";
 import { useEffect, useRef, useState } from "react";
 import Web3Modal from "web3modal";
 import { addLiquidity, calculateCD } from "../utils/addLiquidity";
@@ -21,10 +21,10 @@ const Home: NextPage = () => {
     const zero = BigNumber.from(0);
 
     /** Variables to keep track of amount */
-    // `ethBalance` keeps track of the amount of Eth held by the user's account
-    const [ethBalance, setEtherBalance] = useState<BigNumber | 0>(zero);
-    // `reservedCD` keeps track of the Crypto Dev tokens Reserve balance in the Exchange contract
-    const [reservedCD, setReservedCD] = useState(zero);
+    // `etherBalance` keeps track of the amount of Eth held by the user's account
+    const [etherBalance, setEtherBalance] = useState<BigNumber | 0>(zero);
+    // `reserveCD` keeps track of the Crypto Dev tokens Reserve balance in the Exchange contract
+    const [reserveCD, setReserveCD] = useState(zero);
     // Keeps track of the ether balance in the contract
     // ** In which contract? Exchange contract or some other one?
     const [etherBalanceContract, setEtherBalanceContract] = useState<BigNumber | 0>(zero);
@@ -34,7 +34,7 @@ const Home: NextPage = () => {
     const [lpBalance, setLPBalance] = useState(zero);
 
     /** Variables to keep track of liquidity to be added or removed */
-    // addEther is the amount of Ether that the user wants to add to the liquidity
+    // `addEther` is the amount of Ether that the user wants to add to the liquidity
     const [addEther, setAddEther] = useState<BigNumber | string>(zero);
     // addCDTokens keeps track of the amount of CD tokens that the user wants to add to the liquidity
     // in case when there is no initial liquidity and after liquidity gets added it keeps track of the
@@ -55,7 +55,7 @@ const Home: NextPage = () => {
     const [swapAmount, setSwapAmount] = useState("");
     // This keeps track of the number of tokens (ETH or CD) that the user would receive after a
     // swap completes
-    const [tokenToBeReceivedAfterSwap, settokenToBeReceivedAfterSwap] = useState(zero);
+    const [tokenToBeReceivedAfterSwap, setTokenToBeReceivedAfterSwap] = useState(zero);
     // Keeps track of whether `Eth` or `Crypto Dev` token is selected. If `Eth` is selected it means that the user
     // wants to swap some `Eth` for some `Crypto Dev` tokens and vice versa if `Eth` is not selected
     const [ethSelected, setEthSelected] = useState(true);
@@ -67,7 +67,7 @@ const Home: NextPage = () => {
     const [walletConnected, setWalletConnected] = useState(false);
 
     /**
-     * getAmounts call various functions to retrieve amounts for ethBalance,
+     * getAmounts call various functions to retrieve amounts for etherBalance,
      * LP tokens etc
      */
     const getAmounts = async () => {
@@ -80,24 +80,23 @@ const Home: NextPage = () => {
             const address: string = await signer.getAddress();
 
             // get the amount of eth in the user's account
-            const _ethBalance = await getEtherBalance(provider, address);
+            const _etherBalance = await getEtherBalance(provider, address);
             // get the amount of `Crypto Dev` tokens held by the user
             const _cdBalance = await getCDTokensBalance(provider, address);
             // get the amount of `Crypto Dev` LP tokens held by the user
             const _lpBalance = await getLPTokensBalance(provider, address);
             // gets the amount of `CD` tokens that are present in the reserve of the `Exchange contract`
-            const _reservedCD = await getReserveOfCDTokens(provider);
+            const _reserveCD = await getReserveOfCDTokens(provider);
             // Get the ether reserves in the contract
             // ** What is the difference between `Exchange contract` & `contract` here? A: They're probably the same
-            // ** Why do we have `null` as the second argument?
-            const _ethBalanceContract = await getEtherBalance(provider, null, true);
+            // Why do we have `null` as 2nd arg? A: 2nd arg of `null` & 3rd arg of `true` fetch eth balance of `Exchange contract`
+            const _etherBalanceContract = await getEtherBalance(provider, null, true);
 
-            setEtherBalance(_ethBalance);
+            setEtherBalance(_etherBalance);
             setCDBalance(_cdBalance);
             setLPBalance(_lpBalance);
-            setReservedCD(_reservedCD);
-            setReservedCD(_reservedCD);
-            setEtherBalanceContract(_ethBalanceContract);
+            setReserveCD(_reserveCD);
+            setEtherBalanceContract(_etherBalanceContract);
         } catch (error) {
             console.error(error);
         }
@@ -147,18 +146,18 @@ const Home: NextPage = () => {
                 const provider = await getProviderOrSigner();
                 // Get the amount of ether in the contract
                 // ** Why do we have `null` as the second argument?
-                const _ethBalance = await getEtherBalance(provider, null, true);
+                const _etherBalance = await getEtherBalance(provider, null, true);
                 // Call the `getAmountOfTokensReceivedFromSwap` from the utils folder
                 const amountOfTokens = await getAmountOfTokensReceivedFromSwap(
                     _swapAmountWEI,
                     provider,
                     ethSelected,
-                    _ethBalance,
-                    reservedCD
+                    _etherBalance,
+                    reserveCD
                 );
-                settokenToBeReceivedAfterSwap(amountOfTokens);
+                setTokenToBeReceivedAfterSwap(amountOfTokens);
             } else {
-                settokenToBeReceivedAfterSwap(zero);
+                setTokenToBeReceivedAfterSwap(zero);
             }
         } catch (err) {
             console.error(err);
@@ -243,7 +242,7 @@ const Home: NextPage = () => {
             const removeLPTokenWei = utils.parseEther(_removeLPTokens);
             // Get the Eth reserves within the exchange contract
             // ** Why `null` again?
-            const _ethBalance = await getEtherBalance(provider, null, true);
+            const _etherBalance = await getEtherBalance(provider, null, true);
             // get the crypto dev token reserves from the contract
             const cryptoDevTokenReserve = await getReserveOfCDTokens(provider);
             // call the getTokensAfterRemove from the utils folder
@@ -253,7 +252,7 @@ const Home: NextPage = () => {
                 removeLPTokenWei,
                 // ** Argument of type 'BigNumber | 0' is not assignable to parameter of type 'BigNumber'. Ignoring for now
                 // @ts-ignore
-                _ethBalance,
+                _etherBalance,
                 cryptoDevTokenReserve
             );
             setRemoveEther(tokensAfterRemove!._removeEther);
@@ -320,7 +319,7 @@ const Home: NextPage = () => {
     useEffect(() => {
         // if wallet is not connected, create a new instance of Web3Modal and connect the MetaMask wallet
         if (!walletConnected) {
-            // Assign the Web3Modal class to the reference object by setting it's `current` value
+            // Assign the Web3Modal class to the reference object by setting its `current` value
             // The `current` value is persisted throughout as long as this page is open
             // @ts-ignore
             web3ModalRef.current = new Web3Modal({
@@ -332,9 +331,6 @@ const Home: NextPage = () => {
             getAmounts();
         }
     }, [walletConnected]);
-
-    // console.log("addEther:", addEther);
-    // console.log("typeof addEther:", typeof addEther);
 
     /*
       renderButton: Returns a button based on the state of the dapp
@@ -363,7 +359,7 @@ const Home: NextPage = () => {
                         {/* Convert the BigNumber to string using the formatEther function from ethers.js */}
                         {utils.formatEther(cdBalance)} Crypto Dev Tokens
                         <br />
-                        {utils.formatEther(ethBalance)} Ether
+                        {utils.formatEther(etherBalance)} Ether
                         <br />
                         {utils.formatEther(lpBalance)} Crypto Dev LP tokens
                     </div>
@@ -371,7 +367,7 @@ const Home: NextPage = () => {
                         {/* If reserved CD is zero, render the state for liquidity zero where we ask the user
             how much initial liquidity he wants to add else just render the state where liquidity is not zero and
             we calculate based on the `Eth` amount specified by the user how much `CD` tokens can be added */}
-                        {utils.parseEther(reservedCD.toString()).eq(zero) ? (
+                        {utils.parseEther(reserveCD.toString()).eq(zero) ? (
                             <div>
                                 <input
                                     type="number"
@@ -403,7 +399,7 @@ const Home: NextPage = () => {
                                         const _addCDTokens = await calculateCD(
                                             e.target.value || "0",
                                             etherBalanceContract,
-                                            reservedCD
+                                            reserveCD
                                         );
                                         setAddCDTokens(_addCDTokens);
                                     }}
